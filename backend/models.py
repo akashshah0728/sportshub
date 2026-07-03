@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Numeric, Date, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Numeric, Date, Boolean, UniqueConstraint
 from database import Base
 
 
@@ -45,6 +45,9 @@ class League(Base):
 
 class LeagueMember(Base):
     __tablename__ = "league_members"
+    __table_args__ = (
+        UniqueConstraint('league_id', "user_id", "season_id", name="uq_league_member_per_season"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     league_id = Column(Integer, ForeignKey("leagues.id"), nullable=False)
@@ -59,6 +62,9 @@ class LeagueMember(Base):
 
 class LeagueRule(Base):
     __tablename__ = "league_rules"
+    __table_args__ = (
+        UniqueConstraint("league_id", "season_id", name="uq_league_rule_per_season"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     league_id = Column(Integer, ForeignKey("leagues.id"), nullable=False)
@@ -74,6 +80,9 @@ class LeagueRule(Base):
 
 class InsuranceRule(Base):
     __tablename__ = "insurance_rules"
+    __table_args__ = (
+        UniqueConstraint("league_id", "season_id", "week_number", name="uq_insurance_rule_per_week"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     league_id = Column(Integer, ForeignKey("leagues.id"), nullable=False)
