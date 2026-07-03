@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Numeric, Date, Boolean
 from database import Base
 
 
@@ -42,3 +42,53 @@ class League(Base):
     id = Column(Integer, primary_key=True, index=True)
     league_name = Column(String, nullable=False)
     join_code = Column(String, unique=True, nullable=False, index=True)
+
+class LeagueMember(Base):
+    __tablename__ = "league_members"
+
+    id = Column(Integer, primary_key=True, index=True)
+    league_id = Column(Integer, ForeignKey("leagues.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    season_id = Column(Integer, ForeignKey("seasons.id"), nullable=False)
+    member_role = Column(
+        Enum("commissioner", "player", name="member_role_enum"),
+        nullable=False,
+    )
+    buy_in_amount = Column(Numeric(10, 2), nullable=False)
+    initial_seed_money = Column(Numeric(12, 2), nullable=False)
+
+class LeagueRule(Base):
+    __tablename__ = "league_rules"
+
+    id = Column(Integer, primary_key=True, index=True)
+    league_id = Column(Integer, ForeignKey("leagues.id"), nullable=False)
+    season_id = Column(Integer, ForeignKey("seasons.id"), nullable=False)
+    global_minimum_wager = Column(Numeric(10, 2), nullable=False)
+    favorite_odds_threshold = Column(Integer, nullable=False)
+    favorite_odds_ceiling = Column(Integer, nullable=False)
+    predictions_lock_date = Column(Date, nullable=False)
+    usd_to_seed_money_conversion = Column(Numeric(10, 4), nullable=False)
+    minimum_usd_buy_in = Column(Numeric(10, 2), nullable=False)
+    maximum_insurance_refund = Column(Numeric(10, 2), nullable=False)
+    postseason_wagering_enabled = Column(Boolean, nullable=False, default=False)
+
+class InsuranceRule(Base):
+    __tablename__ = "insurance_rules"
+
+    id = Column(Integer, primary_key=True, index=True)
+    league_id = Column(Integer, ForeignKey("leagues.id"), nullable=False)
+    season_id = Column(Integer, ForeignKey("seasons.id"), nullable=False)
+    week_number = Column(Integer, nullable=False)
+    insurance_allowance = Column(Integer, nullable=False)
+
+class Week(Base):
+    __tablename__ = "weeks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    season_id = Column(Integer, ForeignKey("seasons.id"), nullable=False)
+    week_number = Column(Integer, nullable=False)
+    week_status = Column(
+        Enum("active", "concluded", name="week_status_enum"),
+        nullable=False,
+    )
+    is_postseason = Column(Boolean, nullable=False, default=False)
