@@ -5,3 +5,4 @@ __pycachse__/
 *.pyc
 *.pyo
 .pytest_cache/
+.env
