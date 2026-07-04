@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Numeric, Date, Boolean, UniqueConstraint
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Numeric, Date, Boolean, UniqueConstraint, DateTime
 from database import Base
 
 
@@ -101,3 +101,70 @@ class Week(Base):
         nullable=False,
     )
     is_postseason = Column(Boolean, nullable=False, default=False)
+
+class Game(Base):
+    __tablename__ = "games"
+
+    id = Column(Integer, primary_key=True, index=True)
+    week_id = Column(Integer, ForeignKey("weeks.id"), nullable=False)
+    season_id = Column(Integer, ForeignKey("seasons.id"), nullable=False)
+    home_team_id = Column(Integer, ForeignKey("nfl_teams.id"), nullable=False)
+    away_team_id = Column(Integer, ForeignKey("nfl_teams.id"), nullable=False)
+    kickoff_time = Column(DateTime(timezone=True), nullable=False)
+    status = Column(
+        Enum("scheduled", "in_progress", "concluded", name="game_status_enum"),
+        nullable=False,
+        default="scheduled",
+    )
+    outcome = Column(
+        Enum("home_win", "away_win", "tied", name="game_outcome_enum"),
+        nullable=True,
+    )
+    home_team_odds = Column(Integer, nullable=False)
+    away_team_odds = Column(Integer, nullable=False)
+
+class CustomPrediction(Base):
+    __tablename__ = "custom_predictions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    league_member_id = Column(Integer, ForeignKey("league_members.id"), nullable=False)
+    prediction = Column(String, nullable=False)
+    bold_level = Column(
+        Enum("mild", "hot", "red_hot", "moronic", name = "bold_level_enum"),
+        nullable=False,
+        )
+
+class SetPrediction(Base):
+    __tablename__ = "set_predictions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    league_member_id = Column(Integer, ForeignKey("league_members.id"), nullable=False)
+    category = Column(
+        Enum(
+            "last_undefeated_team",
+            "first_coach_fired",
+            "super_bowl_champion",
+            "longest_losing_streak",
+            "longest_win_streak",
+            "longest_field_goal",
+            "best_record",
+            "worst_record",
+            "first_qb_benched",
+            "mvp",
+            "dpoy",
+            "nfc_champion",
+            "afc_champion",
+            name="set_prediction_category_enum",
+        ),
+        nullable=False,
+    )
+    predicted_team_id = Column(Integer, ForeignKey("nfl_teams.id"), nullable=True)
+    predicted_player_id = Column(Integer, ForeignKey("nfl_players.id"), nullable=True)
+    predicted_text = Column(String, nullable=True)
+
+class PrizeMoney(Base):
+    __tablename__ = "prize_money"
+
+    id = Column(Integer, primary_key=True, index=True)
+    league_member_id = Column(Integer, ForeignKey("league_members.id"), nullable=False)
+    usd_winnings = Column(Numeric(10,2), nullable=False)
