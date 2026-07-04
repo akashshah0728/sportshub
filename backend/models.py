@@ -168,3 +168,41 @@ class PrizeMoney(Base):
     id = Column(Integer, primary_key=True, index=True)
     league_member_id = Column(Integer, ForeignKey("league_members.id"), nullable=False)
     usd_winnings = Column(Numeric(10,2), nullable=False)
+
+class Wager(Base):
+    __tablename__ = "wagers"
+    __table_args__ = (
+        UniqueConstraint("league_member_id", "game_id", name="uq_wager_per_game"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    league_member_id = Column(Integer, ForeignKey("league_members.id"), nullable=False)
+    game_id = Column(Integer, ForeignKey("games.id"), nullable=False)
+    selected_team_id = Column(Integer, ForeignKey("nfl_teams.id"), nullable=False)
+    amount_wagered = Column(Numeric(10, 2), nullable=False)
+    moneyline_odds = Column(Integer, nullable=False)
+    status = Column(
+        Enum("pending", "won", "lost", "push", name="wager_status_enum"),
+        nullable=False,
+        default="pending",
+    )
+    payout = Column(Numeric(10, 2), nullable=False)
+    is_insured = Column(Boolean, nullable=False, default=False)
+    insurance_refund_amount = Column(Numeric(10, 2), nullable=True)
+
+
+class PostseasonPrediction(Base):
+    __tablename__ = "postseason_predictions"
+    __table_args__ = (
+        UniqueConstraint("league_member_id", "game_id", name="uq_postseason_prediction_per_game"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    league_member_id = Column(Integer, ForeignKey("league_members.id"), nullable=False)
+    game_id = Column(Integer, ForeignKey("games.id"), nullable=False)
+    selected_team_id = Column(Integer, ForeignKey("nfl_teams.id"), nullable=False)
+    status = Column(
+        Enum("pending", "correct", "incorrect", name="postseason_prediction_status_enum"),
+        nullable=False,
+        default="pending",
+    )
