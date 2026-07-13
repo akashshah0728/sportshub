@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 
 from database import get_db
 from models import User
-from schemas import UserCreate, UserRead
+from schemas import UserCreate, UserRead, UserUpdate
 
 app = FastAPI()
 
@@ -33,3 +33,57 @@ def create_user(user_in: UserCreate, db: Session = Depends(get_db)):
         )
     db.refresh(new_user)
     return new_user
+
+@app.get("/users/{user_id}", response_model=UserRead)
+def read_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.get(User, user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {user_id} not found.",
+        )
+    return user
+
+
+@app.get("/users", response_model=list[UserRead])
+def list_users(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+):
+    return db.query(User).offset(skip).limit(limit).all()
+
+@app.patch("/users/{user_id}", response_model=UserRead)
+def update_user(user_id: int, user_in: UserUpdate, db: Session = Depends(get_db)):
+    user = db.get(User, user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {user_id} not found.",
+        )
+
+    update_data = user_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(user, field, value)
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A user with that email already exists.",
+        )
+    db.refresh(user)
+    return user
+
+@app.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.get(User, user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {user_id} not found.",
+        )
+    db.delete(user)
+    db.commit()
