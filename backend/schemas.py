@@ -20,3 +20,17 @@ class UserUpdate(BaseModel):
     display_name: str | None = None
     first_name: str | None = None
     last_name: str | None = None
+
+class SeasonCreate(BaseModel):
+    season_year: int
+
+
+class SeasonRead(BaseModel):
+    id: int
+    season_year: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SeasonUpdate(BaseModel):
+    season_year: int | None = None
